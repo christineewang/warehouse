@@ -1,0 +1,13 @@
+###导入原始data
+mydata <- read.csv("https://ximarketing.github.io/class/Kickstarter-Project.csv", fileEncoding = "UTF-8-BOM") 
+summary(mydata) 
+
+###构筑因变量，Completion Rate，即FundingRaised和Target的比值
+mydata$CompletionRate <- mydata$FundingRaised/mydata$Target
+
+###run regression: dependant variable: Completion Rate; independant variable: Energy, Upset, Angry
+result <- lm(CompletionRate ~ Energy + Upset + Angry, data=mydata)
+summary(result)
+
+###发现三个结果均不显著。尝试
+
