@@ -9,5 +9,52 @@ mydata$CompletionRate <- mydata$FundingRaised/mydata$Target
 result <- lm(CompletionRate ~ Energy + Upset + Angry, data=mydata)
 summary(result)
 
-###发现三个结果均不显著。尝试
+###发现三个结果均不显著。尝试尝试以outcome为因变量的logistic回归，发现结果显著
+probit<- glm(Outcome ~ Energy + Upset + Angry, data = mydata, family = binomial(link = "probit"))
+summary(probit)
 
+####绘制以energy为x轴，CompletionRate为y轴的散点图，发现四个极端值
+plot(mydata$Energy, mydata$CompletionRate)
+
+####去掉四个outliers之后的数据命名为Kickstarter_Project_test，将其导入至R studio中
+summary(Kickstarter_Project_test)
+
+####用新数据集做regression，发现Energy、Upset结果显著，Angry结果不显著
+result <- lm(CompletionRate ~ Energy + Upset + Angry, data = Kickstarter_Project_test)
+summary(result)
+
+####绘制CompletionRate矩形图，右偏
+hist(Kickstarter_Project_test$CompletionRate, breaks = 50, col = "green")
+####绘制Angry矩形图，右偏
+hist(Kickstarter_Project_test$Angry, breaks = 50, col = "red")
+
+####给CompletionRate、Angry取log
+Kickstarter_Project_test$LogCompletionRate=log(Kickstarter_Project_test$CompletionRate+1)
+Kickstarter_Project_test$LogAngry=log(Kickstarter_Project_test$Angry+1)
+hist(Kickstarter_Project_test$LogCompletionRate, breaks = 50, col = "green")
+hist(Kickstarter_Project_test$LogAngry, breaks = 50, col = "red")
+
+####log之后显著了，说明Angry对LogCompletionRate有影响
+result <- lm(LogCompletionRate ~ LogAngry, data = Kickstarter_Project_test)
+summary(result)
+
+####energy和upset虽然显著，但是通过图像可以看出也都存在右偏问题。
+hist(Kickstarter_Project_test$Energy, breaks = 50, col = "yellow")
+hist(Kickstarter_Project_test$Upset, breaks = 50, col = "blue")
+
+####让因变量和自变量全部取log之后，重新进行回归，三个变量全部显著，且系数变大
+Kickstarter_Project_test$LogUpset=log(Kickstarter_Project_test$Upset+1)
+Kickstarter_Project_test$LogEnergy=log(Kickstarter_Project_test$Energy+1)
+result <- lm(CompletionRate ~ LogEnergy + LogUpset + LogAngry, data = Kickstarter_Project_test)
+summary(result)
+
+####分别单独对Energy和Upset进行回归，全部显著（说明不存在共线性问题）
+result <- lm(LogCompletionRate ~ LogEnergy, data = Kickstarter_Project_test)
+summary(result)
+result <- lm(LogCompletionRate ~ LogUpset, data = Kickstarter_Project_test)
+summary(result)
+
+####其他自变量研究方法与上面类似，对于IsVideoAvailable这样的dummy variables，回归公式稍有变动
+Kickstarter_Project_test$LogVideoLength=log(Kickstarter_Project_test$VideoLength+1)
+result <- lm( LogCompletionRate~ LogVideoLength + factor(IsVideoAvailable), data = Kickstarter_Project_test)
+summary(result)
