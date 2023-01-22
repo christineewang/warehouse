@@ -1,0 +1,104 @@
+####导入数据
+mydata = read.csv('/dataset/Centaline_data/Centaline_data.csv',header=TRUE)
+head(mydata)
+
+####增加数据Unit price作为因变量
+mydata$Unit_price<- mydata$Transaction_price/mydata$Saleable_size
+
+####构筑三个subset：poor,middle,rich
+subdata_rich <- subset(mydata, HMA == "Mid-Levels West")
+subdata_middle <- subset(mydata, HMA == "Tin Shui Wai")
+subdata_poor <- subset(mydata, HMA == "Jordan")
+
+####用splines进行样条估计，分段拟合 Rich
+#install.packages("splines")
+library(splines)
+####bs(subdata_rich$Saleable_size, df = NULL, knots = NULL, degree =3, intercept = FALSE, Boundary.knots = range(subdata_rich$Saleable_size))
+bspl <- lm(Unit_price ~ bs(subdata_rich$Saleable_size), data = subdata_rich)
+summary(bspl)
+plot(subdata_rich$Saleable_size,subdata_rich$Unit_price)
+lines(subdata_rich$Saleable_size,fitted(bspl),lwd = 2, col = 2)
+####把面积从最小到最大以10尺的间距切片
+size<-data.frame(x=seq(245,1465,10))
+####得到不同的面积对应的单位价格（fit)
+splineres = predict(bspl,size)
+
+library(stargazer)
+stargazer(bspl, title = "bspl output", align = TRUE, out = "bspl_rich.html", type = "html")
+getwd()
+
+
+# 选df=50的时候，拟合很不平滑，看到面积为738，739的时候有异常值，感觉应该是outlier，不用考虑。
+# 所以去选较小的df，发现选5就差不多了
+size = sort(unique(subdata_rich$Saleable_size))
+price = rep(0, length(size))
+
+for (i in 1:length(size)){
+  price[i] = mean(subdata_rich$Unit_price[subdata_rich$Saleable_size == size[i]])
+}
+myspline = lm(price ~ bs(size, df=5, intercept = T))
+mysplineres = predict(myspline)
+plot(size, mysplineres)
+
+
+####用splines进行样条估计，分段拟合Middle
+#install.packages("splines")
+library(splines)
+####bs(subdata_middle$Saleable_size, df = NULL, knots = NULL, degree =3, intercept = FALSE, Boundary.knots = range(subdata_middle$Saleable_size))
+bspl <- lm(Unit_price ~ bs(subdata_middle$Saleable_size), data = subdata_middle)
+summary(bspl)
+plot(subdata_middle$Saleable_size,subdata_middle$Unit_price)
+lines(subdata_middle$Saleable_size,fitted(bspl),lwd = 2, col = 2)
+####把面积从最小到最大以10尺的间距切片
+size<-data.frame(x=seq(245,1465,10))
+####得到不同的面积对应的单位价格（fit)
+splineres = predict(bspl,size)
+
+install.packages("stargazer")
+library(stargazer)
+stargazer(bspl, title = "bspl output", align = TRUE, out = "bspl_middle.html", type = "html")
+getwd()
+
+
+# 选df=50的时候，拟合很不平滑，看到面积为738，739的时候有异常值，感觉应该是outlier，不用考虑。
+# 所以去选较小的df，发现选5就差不多了
+size = sort(unique(subdata_middle$Saleable_size))
+price = rep(0, length(size))
+
+for (i in 1:length(size)){
+  price[i] = mean(subdata_middle$Unit_price[subdata_middle$Saleable_size == size[i]])
+}
+myspline = lm(price ~ bs(size, df=5, intercept = T))
+mysplineres = predict(myspline)
+plot(size, mysplineres)
+
+####用splines进行样条估计，分段拟合 Poor
+#install.packages("splines")
+library(splines)
+####bs(subdata_poor$Saleable_size, df = NULL, knots = NULL, degree =3, intercept = FALSE, Boundary.knots = range(subdata_middle$Saleable_size))
+bspl <- lm(Unit_price ~ bs(subdata_poor$Saleable_size), data = subdata_poor)
+summary(bspl)
+plot(subdata_poor$Saleable_size,subdata_poor$Unit_price)
+lines(subdata_poor$Saleable_size,fitted(bspl),lwd = 2, col = 2)
+####把面积从最小到最大以10尺的间距切片
+size<-data.frame(x=seq(245,1465,10))
+####得到不同的面积对应的单位价格（fit)
+splineres = predict(bspl,size)
+
+library(stargazer)
+stargazer(bspl, title = "bspl output", align = TRUE, out = "bspl_poor.html", type = "html")
+getwd()
+
+# 选df=50的时候，拟合很不平滑，看到面积为738，739的时候有异常值，感觉应该是outlier，不用考虑。
+# 所以去选较小的df，发现选5就差不多了
+size = sort(unique(subdata_poor$Saleable_size))
+price = rep(0, length(size))
+
+for (i in 1:length(size)){
+  price[i] = mean(subdata_poor$Unit_price[subdata_poor$Saleable_size == size[i]])
+}
+myspline = lm(price ~ bs(size, df=5, intercept = T))
+mysplineres = predict(myspline)
+plot(size, mysplineres)
+
+
