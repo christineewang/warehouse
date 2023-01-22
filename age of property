@@ -1,0 +1,40 @@
+###导入数据
+mydata = read.csv('/dataset/Centaline_data/Centaline_data.csv',header=TRUE)
+head(mydata)
+
+###观察age of property的分布
+hist(mydata$Age_of_property, breaks = 50, col = "pink")
+
+###构建因变量，以及log处理
+mydata$Unit_price = mydata$Transaction_price/mydata$Saleable_size
+mydata$LogUnit_price=log(mydata$Unit_price)
+mydata$LogPrice = log(mydata$Unit_price)
+
+###对age of property进行分子集
+mydata$age[mydata$Age_of_property >= 30]<-'super_old'
+mydata$age[mydata$Age_of_property <= 30 & mydata$Age_of_property >= 20]<-'old'
+mydata$age[mydata$Age_of_property <= 20 & mydata$Age_of_property >= 10]<-'medium'
+mydata$age[mydata$Age_of_property <= 10]<-'new'
+
+###找出低中高
+subdata_rich <- subset(mydata, HMA == "Mid-Levels West")
+subdata_middle <- subset(mydata, HMA == "Tin Shui Wai")
+subdata_poor <- subset(mydata, HMA == "Jordan")
+
+###看什么因素相关 对于rich
+result_test1 <- lm(LogPrice ~ Saleable_size + factor(age) + Swimming_Pool + Sport_facility + Club + Sauna_Shower + Study_Room , subdata_rich)
+summary(result_test1)
+stargazer(result_test1,tilte="Regression Results",align=TRUE,out="result.html",type="html")
+getwd()
+
+###看什么因素相关 对于middle
+result_test2 <- lm(LogPrice ~ Saleable_size + factor(age) + Swimming_Pool + Sport_facility + Club + Sauna_Shower + Study_Room , subdata_middle)
+summary(result_test2)
+stargazer(result_test2,tilte="Regression Results",align=TRUE,out="result.html",type="html")
+getwd()
+
+###看什么因素相关 对于poor
+result_test3 <- lm(LogPrice ~ Saleable_size + factor(age) + Swimming_Pool + Sport_facility + Club + Sauna_Shower + Study_Room , subdata_poor)
+summary(result_test3)
+stargazer(result_test3,tilte="Regression Results",align=TRUE,out="result.html",type="html")
+getwd()
