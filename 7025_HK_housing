@@ -1,0 +1,77 @@
+####导入数据
+mydata = read.csv('/dataset/Centaline_data/Centaline_data.csv',header=TRUE)
+head(mydata)
+
+####增加数据Unit price，并取log，作为因变量
+mydata$Unit_price<- mydata$Transaction_price/mydata$Saleable_size
+mydata$LogPrice = log(mydata$Unit_price)
+
+####构筑三个subset：poor,middle,rich
+subdata_rich <- subset(mydata, HMA == "Mid-Levels West")
+subdata_middle <- subset(mydata, HMA == "Tin Shui Wai")
+subdata_poor <- subset(mydata, HMA == "Jordan")
+
+####分别绘制三个区域内房价与面积的关系
+install.packages("ggplot2")
+library(ggplot2)
+ggplot(subdata_rich, mapping = aes(Saleable_size, Unit_price)) +stat_summary_bin(fun.y="mean", geom="bar",bins=60)+xlim(0, 2000)
+ggplot(subdata_middle, mapping = aes(Saleable_size, Unit_price)) +stat_summary_bin(fun.y="mean", geom="bar",bins=60)+xlim(0, 2000)
+ggplot(subdata_poor, mapping = aes(Saleable_size, Unit_price)) +stat_summary_bin(fun.y="mean", geom="bar",bins=60)+xlim(0, 2000)
+
+###rich,尝试线性回归和quadratic回归
+result_rich1 <- lm(Unit_price ~ Saleable_size, data = subdata_rich)
+summary(result_rich1)
+result_rich2 <- lm(Unit_price ~ Saleable_size + I(Saleable_size^2), data = subdata_rich)
+summary(result_rich2)
+####quadratic拟合好于linear,R方更大
+
+####如需合并展示，可以使用：
+install.packages("stargazer")
+library(stargazer)
+stargazer(result_rich1, result_rich2, title = "regression output", align = TRUE, out = "regression_price_rich.html", type = "html")
+getwd()
+
+###middle,尝试线性回归和quadratic回归
+result_middle1 <- lm(Unit_price ~ Saleable_size, data = subdata_middle)
+summary(result_middle1)
+result_middle2 <- lm(Unit_price ~ Saleable_size + I(Saleable_size^2), data = subdata_middle)
+summary(result_middle2)
+####quadratic拟合好于linear，R方更大
+
+####poor,尝试线性回归和quadratic回归
+result_poor1 <- lm(Unit_price ~ Saleable_size, data = subdata_poor)
+summary(result_poor1)
+result_poor2 <- lm(Unit_price ~ Saleable_size + I(Saleable_size^2), data = subdata_poor)
+summary(result_poor2)
+###quadratic拟合好于linear，R方更大。
+
+####如果将三个分区结果合并展示
+stargazer(result_rich2, result_middle2, result_poor2,title = "regression output", align = TRUE, out = "regression_price.html", type = "html")
+
+####middle-class的深入分析之interaction
+####unit price ~ age of properties*size
+result_age <- lm(LogPrice ~ Age_of_property * Saleable_size , subdata_middle)
+summary(result_age)
+####unit price ~ floor*size
+result_floor <- lm(LogPrice ~ No_of_rooms Floor * Saleable_size , subdata_middle)
+summary(result_floor)
+####unit price ~ facilities*size
+
+result_facilities <- lm(LogPrice ~ Shopping_Mall + Swimming_Pool + Sport_facility + Club + Garden + Sauna_Shower + Playground + Cinema + Bar_karaoke + Study_Room + Ballroom, subdata_middle)
+summary(result_facilities)
+####显著的有Swimming_Pool（三星），Sauna_Shower（三星），Sport_facility（一星），Garden（一星）
+####分别做interaction
+####swimming pool
+result_Swimming_Pool <- lm(LogPrice ~ Swimming_Pool * Saleable_size , subdata_middle)
+summary(result_Swimming_Pool)
+####Sauna_Shower
+result_Sauna_Shower <- lm(LogPrice ~ Sauna_Shower * Saleable_size , subdata_middle)
+summary(result_Sauna_Shower)
+####Sport_facility
+result_Sport_facility <- lm(LogPrice ~ Sport_facility * Saleable_size , subdata_middle)
+summary(result_Sport_facility)
+####Sport_facility
+result_Garden<- lm(LogPrice ~ Garden * Saleable_size , subdata_middle)
+summary(result_Garden)
+       
+       
